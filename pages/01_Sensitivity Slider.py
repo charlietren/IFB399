@@ -1,9 +1,36 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+from streamlit.components.v1 import html
+
+#cheeky js to navigate to other pages src: https://github.com/streamlit/streamlit/issues/4832
+def nav_page(Generate_Report, timeout_secs=3):
+    nav_script = """
+        <script type="text/javascript">
+            function attempt_nav_page(page_name, start_time, timeout_secs) {
+                var links = window.parent.document.getElementsByTagName("a");
+                for (var i = 0; i < links.length; i++) {
+                    if (links[i].href.toLowerCase().endsWith("/" + page_name.toLowerCase())) {
+                        links[i].click();
+                        return;
+                    }
+                }
+                var elasped = new Date() - start_time;
+                if (elasped < timeout_secs * 1000) {
+                    setTimeout(attempt_nav_page, 100, page_name, start_time, timeout_secs);
+                } else {
+                    alert("Unable to navigate to page '" + page_name + "' after " + timeout_secs + " second(s).");
+                }
+            }
+            window.addEventListener("load", function() {
+                attempt_nav_page("%s", new Date(), %d);
+            });
+        </script>
+    """ % (Generate_Report, timeout_secs)
+    html(nav_script)
+
 
 st.title('Sensitivity Slider')
-
 
 file = st.file_uploader('Upload File', type='.csv')
 
@@ -21,7 +48,6 @@ if file is not None:
 
     cor_type1 = st.selectbox('Select Correlation Type', cor_types)
 
-
 #button to display selected csv file
 with st.form("Show Table button"):
     show_table_button = st.form_submit_button("Show Table")
@@ -38,10 +64,11 @@ with st.form("Apply Sensitivity Selection Button"):
 
 #button to display elements based on sensitivity analysis
 if sensitivity_button:
-    fields = elements
-    dataframe = pd.read_csv('BR20279856_cleaned.csv', skipinitialspace=True, usecols=fields)
+    dataframe = pd.read_csv('BR20279856_cleaned.csv', skipinitialspace=True, usecols=elements)
     st.write(dataframe.Ag)
     
 #button to go to page 3
 with st.form("Go to Page 3 Button"):
     sensitivity_button = st.form_submit_button("Go to Page 3")
+if sensitivity_button:
+    nav_page("Generate_Report")
