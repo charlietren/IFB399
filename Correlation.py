@@ -2,10 +2,6 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-import streamlit as st
-import pandas as pd
-import numpy as np
-
 from streamlit.components.v1 import html
 
 st.title('Select Element and Correlation')
