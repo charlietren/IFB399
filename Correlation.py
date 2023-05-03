@@ -98,6 +98,9 @@ if file is not None:
 
         # if element is the filtered columns
         if element1 in corr_df_matrix.columns:
+            # new title
+            st.title('Select Correlation Threshold')
+
             # sort matrix
             dataFinal = corr_df_matrix[[element1]].sort_values(element1, ascending = True)
 
@@ -111,7 +114,7 @@ if file is not None:
 
                 #button to confirm sensitivity selection
                 next2 = st.form_submit_button("Visualise")
-        # if element is not in filtered columns
+        # if element is not in filtered columns, display error and list available elements
         else:
             st.error('Please try another element', icon="🚨")
             st.error('Available elements:')
