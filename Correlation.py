@@ -75,9 +75,9 @@ if file is not None:
         corr_matrix = file.corr(method=cor_type1, numeric_only = False)
 
         # function that correlates data
-        def correlation(dataset, threshold, correlation):
+        def correlation(dataset, correlation, threshold):
             col_corr = set() # Set of all the names of correlated columns
-            corr_matrix = dataset.corr(method=correlation, numeric_only = False)
+            corr_matrix = dataset.corr(method = correlation, numeric_only = False)
             
             for i in range(len(corr_matrix.columns)):
                 for j in range(i):
@@ -87,29 +87,35 @@ if file is not None:
             return col_corr
         
         # correlate data with initial 0.8 threshold
-        col_corr = correlation(file, 0.8, cor_type1)
+        col_corr = correlation(file, cor_type1, 0.8)
 
-        # I don't quite understand these sections
+        # Converts col_corr from set to list
+        list_col_corr = list(col_corr)
+        # Put it into a dataframe
+        corr_df = file[list_col_corr]
+        # create matrix
+        corr_df_matrix = corr_df.corr(method = cor_type1, numeric_only = False)
 
-        # # Converts col_corr from set to list
-        # list_col_corr = list(col_corr)
-        # # Put it into a dataframe
-        # corr_df = file[list_col_corr]
-        # # create matrix
-        # corr_df_matrix = corr_df.corr(method=cor_type1, numeric_only = False)
-        # dataFinal = corr_df_matrix[element1].sort_values(element1,ascending = True)
+        # if element is the filtered columns
+        if element1 in corr_df_matrix.columns:
+            # sort matrix
+            dataFinal = corr_df_matrix[[element1]].sort_values(element1, ascending = True)
 
-        # show data in dataframe table (replace with actual data later)
-        dataFinal = corr_matrix[[element1]]
-        st.dataframe(data=dataFinal, width=200, height=300)
+            # show data in dataframe table (replace with actual data later)
+            st.dataframe(data=dataFinal, width=200, height=300)
 
-        with st.form("slider_form"):
-            # creates a sensitivity slider between 0 and 100 (values to two decimal points)
-            sensitivity = st.slider('Sensitivity selection', 0.00, 100.00, 50.00)
-            st.write("You have selected a sensitivy of ", sensitivity, '%')
+            with st.form("slider_form"):
+                # creates a sensitivity slider between 0 and 100 (values to two decimal points)
+                sensitivity = st.slider('Sensitivity selection', 0.00, 100.00, 50.00)
+                st.write("You have selected a sensitivy of ", sensitivity, '%')
 
-            #button to confirm sensitivity selection
-            next2 = st.form_submit_button("Visualise")
+                #button to confirm sensitivity selection
+                next2 = st.form_submit_button("Visualise")
+        # if element is not in filtered columns
+        else:
+            st.error('Please try another element', icon="🚨")
+            st.error('Available elements:')
+            st.error(corr_df_matrix.columns.values)
 
 #button to go to page 2
 with st.form("Go to Page 2 Button"):
