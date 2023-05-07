@@ -1,33 +1,35 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 from streamlit.components.v1 import html
 
-#cheeky js to navigate to other pages src: https://github.com/streamlit/streamlit/issues/4832
-def nav_page(Sensitivity_Slider, timeout_secs=3):
-    nav_script = """
-        <script type="text/javascript">
-            function attempt_nav_page(page_name, start_time, timeout_secs) {
-                var links = window.parent.document.getElementsByTagName("a");
-                for (var i = 0; i < links.length; i++) {
-                    if (links[i].href.toLowerCase().endsWith("/" + page_name.toLowerCase())) {
-                        links[i].click();
-                        return;
-                    }
-                }
-                var elasped = new Date() - start_time;
-                if (elasped < timeout_secs * 1000) {
-                    setTimeout(attempt_nav_page, 100, page_name, start_time, timeout_secs);
-                } else {
-                    alert("Unable to navigate to page '" + page_name + "' after " + timeout_secs + " second(s).");
-                }
-            }
-            window.addEventListener("load", function() {
-                attempt_nav_page("%s", new Date(), %d);
-            });
-        </script>
-    """ % (Sensitivity_Slider, timeout_secs)
-    html(nav_script)
+# #cheeky js to navigate to other pages src: https://github.com/streamlit/streamlit/issues/4832
+# def nav_page(Sensitivity_Slider, timeout_secs=3):
+#     nav_script = """
+#         <script type="text/javascript">
+#             function attempt_nav_page(page_name, start_time, timeout_secs) {
+#                 var links = window.parent.document.getElementsByTagName("a");
+#                 for (var i = 0; i < links.length; i++) {
+#                     if (links[i].href.toLowerCase().endsWith("/" + page_name.toLowerCase())) {
+#                         links[i].click();
+#                         return;
+#                     }
+#                 }
+#                 var elasped = new Date() - start_time;
+#                 if (elasped < timeout_secs * 1000) {
+#                     setTimeout(attempt_nav_page, 100, page_name, start_time, timeout_secs);
+#                 } else {
+#                     alert("Unable to navigate to page '" + page_name + "' after " + timeout_secs + " second(s).");
+#                 }
+#             }
+#             window.addEventListener("load", function() {
+#                 attempt_nav_page("%s", new Date(), %d);
+#             });
+#         </script>
+#     """ % (Sensitivity_Slider, timeout_secs)
+#     html(nav_script)
 
 st.title('Select Element and Correlation')
 
@@ -45,18 +47,15 @@ if file is not None:
     file.drop('Final pH', axis = 1, inplace = True)
 
     # create lists for elements and correlations types
-    elements = list(file.columns.values)
+    elements = ['Choose Element'] + list(file.columns.values)
     cor_types = ['pearson', 'spearman', 'kendall']
 
     # create dropdown menus for elements and correlation types
     element1 = st.selectbox('Select Main ELement', elements)
     cor_type1 = st.selectbox('Select Correlation Type', cor_types)
 
-    # create button to analyse data
-    next1 = st.button('Analyse')
-
-    # if button has been pressed
-    if next1:
+    # if element has been chosen
+    if element1 is not 'Choose Element':
         # Converts ppm to ppb
         ppm = []
         for element in file.columns:
@@ -107,23 +106,128 @@ if file is not None:
             # show data in dataframe table (replace with actual data later)
             st.dataframe(data=dataFinal, width=200, height=300)
 
-            with st.form("slider_form"):
-                # creates a sensitivity slider between 0 and 100 (values to two decimal points)
-                sensitivity = st.slider('Sensitivity selection', 0.00, 100.00, 50.00)
-                st.write("You have selected a sensitivy of ", sensitivity, '%')
+            # creates a sensitivity slider between 0 and 100 (values to two decimal points)
+            # sensitivity = st.slider('Sensitivity selection', 0.00, 100.00, 0.00)
+            sensitivity = st.number_input('Sensitivity', min_value=0.00, max_value=100.00, value=0.00)
+            st.write("You have selected a sensitivy of ", sensitivity, '%')
 
-                #button to confirm sensitivity selection
-                next2 = st.form_submit_button("Visualise")
+            # if sensitivity has been chosen
+            if sensitivity is not 0.00:
+                st.title('Visualisation Report')
+
+                # Filter dataframe based on pos / neg correlation 
+                neg_corr_df = corr_df_matrix[corr_df_matrix[[element1]] < 0]
+                pos_corr_df = corr_df_matrix[corr_df_matrix[[element1]] >= 0]
+                neg_corr_df.dropna(how = 'all', inplace = True)
+                neg_corr_df = neg_corr_df[[element1]]
+                pos_corr_df.dropna(how = 'all', inplace = True)
+                pos_corr_df = pos_corr_df[[element1]]
+
+
+                st.write('Plot #1 – Correlation Matrix:')
+                # create heatmap
+                figheat=plt.figure(figsize=(15,8),facecolor='white')
+                sns.heatmap(corr_df_matrix, annot = True, cmap = 'Greens')
+                plt.title(f"Correlation Matrix")
+                st.pyplot(fig=figheat)
+
+
+                # palette = sns.color_palette("light:#5A9", as_cmap=True)
+                custom_palette = sns.color_palette("bright")
+                pos_corr_df = pos_corr_df.sort_values(by = element1, ascending = True).reset_index()
+                pos_corr_df.columns=['Feature','Correlation']
+
+                st.write('Plot #2 – Positively correlated elements:')
+                # create postive correlation bar graph
+                # Correlation with selected variable
+                figposbar=plt.figure(figsize=(15,8),facecolor='white')
+
+                ax0=figposbar.add_subplot(1,1,1)
+                ax0.grid(axis='y', color='gray', linestyle=':', dashes=(3,10))
+
+                palette=["mediumaquamarine" for i in range(16)]
+                # palette[2]='gold'
+                # palette[4]='gold'
+                barplot = sns.barplot(x='Correlation', y='Feature', data=pos_corr_df, palette = palette, zorder=3)
+                plt.bar_label(barplot.containers[0], fmt = '\n%.2f', label_type = 'center')
+
+                # Remove top and right borders
+                ax0.spines['top'].set_visible(False)
+                ax0.spines['right'].set_visible(False)
+
+                # ax0.grid(axis='y', zorder=0, color='gray', linestyle=':', dashes=(3,10))
+                plt.title(f"Positive Correlation matched against {element1}")
+                st.pyplot(fig=figposbar)
+
+
+                st.write('Plot #3 – Negatively correlated elements:')
+                # create negative correlation bar graph
+                neg_corr_df = neg_corr_df.sort_values(by = element1, ascending = False).reset_index()
+                neg_corr_df.columns=['Feature','Correlation']
+
+                # Correlation with selected variable
+                fignegbar=plt.figure(figsize=(15,8),facecolor='white')
+
+                ax0=fignegbar.add_subplot(1,1,1)
+                ax0.grid(axis='y', color='gray', linestyle=':', dashes=(3,10))
+
+                # palette=["mediumaquamarine" for i in range(16)]
+                # palette[2]='gold'
+                # palette[4]='gold'
+                barplot = sns.barplot(x='Correlation', y='Feature', data=neg_corr_df, palette = "Greens")
+                plt.bar_label(barplot.containers[0], fmt = '\n%.2f', size = 14, label_type = 'center')
+
+                # Remove top and right borders
+                ax0.spines['top'].set_visible(False)
+                ax0.spines['right'].set_visible(False)
+
+                # ax0.grid(axis='y', zorder=0, color='gray', linestyle=':', dashes=(3,10))
+                plt.title(f"Negative Correlation matched against {element1}")
+                ax0.invert_xaxis()
+                st.pyplot(fig=fignegbar)
+
+
+                st.write('Plot #4 – Top 5 positive correlated element boxplot:')
+                # postive correlation boxplot
+                PosT5Elements = pos_corr_df['Feature'].iloc[0:5].values
+
+                figposbox, ax = plt.subplots()
+
+                ax.boxplot(file[PosT5Elements])
+                ax.set_xticklabels(PosT5Elements)
+                # ax.set_title
+                ax.set_xlabel('Element')
+                ax.set_ylabel('PPM')
+                st.pyplot(fig=figposbox)
+                
+
+
+                st.write('Plot #5 Top 5 negative correlated element boxplot:')
+                # negative correlation boxplot
+                NegT5Elements = neg_corr_df['Feature'].iloc[0:5].values
+
+                fignegbox, ax = plt.subplots()
+
+                ax.boxplot(file[NegT5Elements])
+                ax.set_xticklabels(NegT5Elements)
+                # ax.set_title
+                ax.set_xlabel('Element')
+                ax.set_ylabel('PPM')
+                st.pyplot(fig=fignegbox)
+                
+ 
         # if element is not in filtered columns, display error and list available elements
         else:
             st.error('Please try another element', icon="🚨")
             st.error('Available elements:')
             st.error(corr_df_matrix.columns.values)
+        
+        
 
-#button to go to page 2
-with st.form("Go to Page 2 Button"):
-    sensitivity_button = st.form_submit_button("Go to Page 2")
-if sensitivity_button:
-    nav_page("Sensitivity_Slider")
+# #button to go to page 2
+# with st.form("Go to Page 2 Button"):
+#     sensitivity_button = st.form_submit_button("Go to Page 2")
+# if sensitivity_button:
+#     nav_page("Sensitivity_Slider")
 
     
