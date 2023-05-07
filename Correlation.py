@@ -47,15 +47,15 @@ if file is not None:
     file.drop('Final pH', axis = 1, inplace = True)
 
     # create lists for elements and correlations types
-    elements = ['Choose Element'] + list(file.columns.values)
-    cor_types = ['pearson', 'spearman', 'kendall']
+    elements = ['Choose'] + list(file.columns.values)
+    cor_types = ['Choose', 'pearson', 'spearman', 'kendall']
 
     # create dropdown menus for elements and correlation types
     element1 = st.selectbox('Select Main ELement', elements)
     cor_type1 = st.selectbox('Select Correlation Type', cor_types)
 
     # if element has been chosen
-    if element1 is not 'Choose Element':
+    if element1 is not 'Choose' and cor_type1 is not 'Choose':
         # Converts ppm to ppb
         ppm = []
         for element in file.columns:
