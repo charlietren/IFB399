@@ -40,35 +40,37 @@ file = st.file_uploader('Upload File', type='.csv')
 if file is not None:
     # read csv file
     file = pd.read_csv(file)
+    
+    # Data Preprocessing 
+    # Converts ppm to ppb
+    ppm = []
 
+    for element in file.columns:
+        if file[element].iloc[0] == 'ppm':
+            ppm.append(element)
+    
     # remove unncessary columns
     file.drop(index = file.index[0], axis = 1, inplace = True)
     file.drop('SAMPLE', axis = 1, inplace = True)
     file.drop('Final pH', axis = 1, inplace = True)
+
+    for c in file.columns:
+        file[c] = file[c].astype(float)
+
+    # multiply ppm values by 1000 to so everythign becomes ppb
+    for element in ppm:
+        file[element] = file[element].apply(lambda x: x*1000)
 
     # create lists for elements and correlations types
     elements = ['Choose'] + list(file.columns.values)
     cor_types = ['Choose', 'pearson', 'spearman', 'kendall']
 
     # create dropdown menus for elements and correlation types
-    element1 = st.selectbox('Select Main ELement', elements)
+    element1 = st.selectbox('Select Element Of Interest', elements)
     cor_type1 = st.selectbox('Select Correlation Type', cor_types)
 
     # if element has been chosen
     if element1 is not 'Choose' and cor_type1 is not 'Choose':
-        # Converts ppm to ppb
-        ppm = []
-        for element in file.columns:
-            if file[element].iloc[0] == 'ppm':
-                ppm.append(element)
-
-        # convert to float
-        for c in file.columns:
-            file[c] = file[c].astype(float)
-
-        # multiply ppm values by 1000 to so everythign becomes ppb
-        for element in ppm:
-            file[element] = file[element].apply(lambda x: x*1000)
         
         # set correlation type
         corr_matrix = file.corr(method=cor_type1, numeric_only = False)
@@ -109,7 +111,7 @@ if file is not None:
             # creates a sensitivity slider between 0 and 100 (values to two decimal points)
             # sensitivity = st.slider('Sensitivity selection', 0.00, 100.00, 0.00)
             sensitivity = st.number_input('Sensitivity', min_value=0.00, max_value=100.00, value=0.00)
-            st.write("You have selected a sensitivy of ", sensitivity, '%')
+            st.write("You have selected a sensitivity of ", sensitivity, '%')
 
             # if sensitivity has been chosen
             if sensitivity is not 0.00:
@@ -122,22 +124,19 @@ if file is not None:
                 neg_corr_df = neg_corr_df[[element1]]
                 pos_corr_df.dropna(how = 'all', inplace = True)
                 pos_corr_df = pos_corr_df[[element1]]
-
-
-                st.write('Plot #1 – Correlation Matrix:')
+                
+                st.subheader('Plot #1 – Correlation Matrix:')
                 # create heatmap
                 figheat=plt.figure(figsize=(15,8),facecolor='white')
                 sns.heatmap(corr_df_matrix, annot = True, cmap = 'Greens')
-                plt.title(f"Correlation Matrix")
                 st.pyplot(fig=figheat)
-
-
+                st.markdown("Next, I performed EDA to gain insights into the asdhasdj.asdaijnkaksjajks")    
                 # palette = sns.color_palette("light:#5A9", as_cmap=True)
                 custom_palette = sns.color_palette("bright")
                 pos_corr_df = pos_corr_df.sort_values(by = element1, ascending = True).reset_index()
                 pos_corr_df.columns=['Feature','Correlation']
 
-                st.write('Plot #2 – Positively correlated elements:')
+                st.subheader('Plot #2 – Positively correlated elements:')
                 # create postive correlation bar graph
                 # Correlation with selected variable
                 figposbar=plt.figure(figsize=(15,8),facecolor='white')
@@ -156,11 +155,11 @@ if file is not None:
                 ax0.spines['right'].set_visible(False)
 
                 # ax0.grid(axis='y', zorder=0, color='gray', linestyle=':', dashes=(3,10))
-                plt.title(f"Positive Correlation matched against {element1}")
+                # plt.title(f"Positive Correlation matched against {element1}")
                 st.pyplot(fig=figposbar)
+                st.markdown("Next, I performed EDA to gain insights into the asdhasdj.asdaijnkaksjajks") 
 
-
-                st.write('Plot #3 – Negatively correlated elements:')
+                st.subheader('Plot #3 – Negatively correlated elements:')
                 # create negative correlation bar graph
                 neg_corr_df = neg_corr_df.sort_values(by = element1, ascending = False).reset_index()
                 neg_corr_df.columns=['Feature','Correlation']
@@ -182,12 +181,12 @@ if file is not None:
                 ax0.spines['right'].set_visible(False)
 
                 # ax0.grid(axis='y', zorder=0, color='gray', linestyle=':', dashes=(3,10))
-                plt.title(f"Negative Correlation matched against {element1}")
+                # plt.title(f"Negative Correlation matched against {element1}")
                 ax0.invert_xaxis()
                 st.pyplot(fig=fignegbar)
 
 
-                st.write('Plot #4 – Top 5 positive correlated element boxplot:')
+                st.subheader('Plot #4 – Top 5 positive correlated element boxplot:')
                 # postive correlation boxplot
                 PosT5Elements = pos_corr_df['Feature'].iloc[0:5].values
 
@@ -195,14 +194,11 @@ if file is not None:
 
                 ax.boxplot(file[PosT5Elements])
                 ax.set_xticklabels(PosT5Elements)
-                # ax.set_title
                 ax.set_xlabel('Element')
                 ax.set_ylabel('PPM')
                 st.pyplot(fig=figposbox)
                 
-
-
-                st.write('Plot #5 Top 5 negative correlated element boxplot:')
+                st.subheader('Plot #5 Top 5 negative correlated element boxplot:')
                 # negative correlation boxplot
                 NegT5Elements = neg_corr_df['Feature'].iloc[0:5].values
 
@@ -210,7 +206,6 @@ if file is not None:
 
                 ax.boxplot(file[NegT5Elements])
                 ax.set_xticklabels(NegT5Elements)
-                # ax.set_title
                 ax.set_xlabel('Element')
                 ax.set_ylabel('PPM')
                 st.pyplot(fig=fignegbox)
