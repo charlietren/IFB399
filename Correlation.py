@@ -75,6 +75,24 @@ if file is not None:
         # set correlation type
         corr_matrix = file.corr(method=cor_type1, numeric_only = False)
 
+        # # if element is the filtered columns
+        # if element1 in corr_df_matrix.columns:
+
+        # new title
+        st.title('Select Correlation Threshold')
+
+        # sort matrix
+        # dataFinal = corr_df_matrix[[element1]].sort_values(element1, ascending = True)
+        dataFinal = corr_matrix[[element1]].sort_values(element1, ascending = True)
+
+        # show data in dataframe table (replace with actual data later)
+        st.dataframe(data=dataFinal, width=200, height=300)
+
+        # creates a sensitivity slider between 0 and 100 (values to two decimal points)
+        # sensitivity = st.slider('Sensitivity selection', 0.00, 100.00, 0.00)
+        threshold = st.number_input('Threshold', min_value=0.00, max_value=100.00, value=0.00)
+        st.write("You have selected a threshold of ", threshold, '%')
+
         # function that correlates data
         def correlation(dataset, correlation, threshold):
             col_corr = set() # Set of all the names of correlated columns
@@ -86,136 +104,122 @@ if file is not None:
                         colname = corr_matrix.columns[i]
                         col_corr.add(colname)
             return col_corr
-        
-        # correlate data with initial 0.8 threshold
-        col_corr = correlation(file, cor_type1, 0.8)
 
-        # Converts col_corr from set to list
-        list_col_corr = list(col_corr)
-        # Put it into a dataframe
-        corr_df = file[list_col_corr]
-        # create matrix
-        corr_df_matrix = corr_df.corr(method = cor_type1, numeric_only = False)
+        # if sensitivity has been chosen
+        if threshold is not 0.00:
+            st.title('Visualisation Report')
+            
+            # correlate data with initial 0.8 threshold
+            col_corr = correlation(file, cor_type1, threshold)
 
-        # if element is the filtered columns
-        if element1 in corr_df_matrix.columns:
-            # new title
-            st.title('Select Correlation Threshold')
+            # Converts col_corr from set to list
+            list_col_corr = list(col_corr)
+            # Put it into a dataframe
+            corr_df = file[list_col_corr]
+            # create matrix
+            corr_df_matrix = corr_df.corr(method = cor_type1, numeric_only = False)
 
-            # sort matrix
-            dataFinal = corr_df_matrix[[element1]].sort_values(element1, ascending = True)
+            # corr_df_matrix[[element1]].sort_values(element1, ascending = True)
 
-            # show data in dataframe table (replace with actual data later)
-            st.dataframe(data=dataFinal, width=200, height=300)
+            # Filter dataframe based on pos / neg correlation 
+            neg_corr_df = corr_df_matrix[corr_df_matrix[[element1]] < 0]
+            pos_corr_df = corr_df_matrix[corr_df_matrix[[element1]] >= 0]
+            neg_corr_df.dropna(how = 'all', inplace = True)
+            neg_corr_df = neg_corr_df[[element1]]
+            pos_corr_df.dropna(how = 'all', inplace = True)
+            pos_corr_df = pos_corr_df[[element1]]
+            
+            st.subheader('Plot #1 – Correlation Matrix:')
+            # create heatmap
+            figheat=plt.figure(figsize=(15,8),facecolor='white')
+            sns.heatmap(corr_df_matrix, annot = True, cmap = 'Greens')
+            st.pyplot(fig=figheat)
+            st.markdown("Next, I performed EDA to gain insights into the asdhasdj.asdaijnkaksjajks")    
+            # palette = sns.color_palette("light:#5A9", as_cmap=True)
+            custom_palette = sns.color_palette("bright")
+            pos_corr_df = pos_corr_df.sort_values(by = element1, ascending = True).reset_index()
+            pos_corr_df.columns=['Feature','Correlation']
 
-            # creates a sensitivity slider between 0 and 100 (values to two decimal points)
-            # sensitivity = st.slider('Sensitivity selection', 0.00, 100.00, 0.00)
-            sensitivity = st.number_input('Sensitivity', min_value=0.00, max_value=100.00, value=0.00)
-            st.write("You have selected a sensitivity of ", sensitivity, '%')
+            st.subheader('Plot #2 – Positively correlated elements:')
+            # create postive correlation bar graph
+            # Correlation with selected variable
+            figposbar=plt.figure(figsize=(15,8),facecolor='white')
 
-            # if sensitivity has been chosen
-            if sensitivity is not 0.00:
-                st.title('Visualisation Report')
+            ax0=figposbar.add_subplot(1,1,1)
+            ax0.grid(axis='y', color='gray', linestyle=':', dashes=(3,10))
 
-                # Filter dataframe based on pos / neg correlation 
-                neg_corr_df = corr_df_matrix[corr_df_matrix[[element1]] < 0]
-                pos_corr_df = corr_df_matrix[corr_df_matrix[[element1]] >= 0]
-                neg_corr_df.dropna(how = 'all', inplace = True)
-                neg_corr_df = neg_corr_df[[element1]]
-                pos_corr_df.dropna(how = 'all', inplace = True)
-                pos_corr_df = pos_corr_df[[element1]]
-                
-                st.subheader('Plot #1 – Correlation Matrix:')
-                # create heatmap
-                figheat=plt.figure(figsize=(15,8),facecolor='white')
-                sns.heatmap(corr_df_matrix, annot = True, cmap = 'Greens')
-                st.pyplot(fig=figheat)
-                st.markdown("Next, I performed EDA to gain insights into the asdhasdj.asdaijnkaksjajks")    
-                # palette = sns.color_palette("light:#5A9", as_cmap=True)
-                custom_palette = sns.color_palette("bright")
-                pos_corr_df = pos_corr_df.sort_values(by = element1, ascending = True).reset_index()
-                pos_corr_df.columns=['Feature','Correlation']
+            palette=["mediumaquamarine" for i in range(16)]
+            # palette[2]='gold'
+            # palette[4]='gold'
+            barplot = sns.barplot(x='Correlation', y='Feature', data=pos_corr_df, palette = palette, zorder=3)
+            plt.bar_label(barplot.containers[0], fmt = '\n%.2f', label_type = 'center')
 
-                st.subheader('Plot #2 – Positively correlated elements:')
-                # create postive correlation bar graph
-                # Correlation with selected variable
-                figposbar=plt.figure(figsize=(15,8),facecolor='white')
+            # Remove top and right borders
+            ax0.spines['top'].set_visible(False)
+            ax0.spines['right'].set_visible(False)
 
-                ax0=figposbar.add_subplot(1,1,1)
-                ax0.grid(axis='y', color='gray', linestyle=':', dashes=(3,10))
+            # ax0.grid(axis='y', zorder=0, color='gray', linestyle=':', dashes=(3,10))
+            # plt.title(f"Positive Correlation matched against {element1}")
+            st.pyplot(fig=figposbar)
+            st.markdown("Next, I performed EDA to gain insights into the asdhasdj.asdaijnkaksjajks") 
 
-                palette=["mediumaquamarine" for i in range(16)]
-                # palette[2]='gold'
-                # palette[4]='gold'
-                barplot = sns.barplot(x='Correlation', y='Feature', data=pos_corr_df, palette = palette, zorder=3)
-                plt.bar_label(barplot.containers[0], fmt = '\n%.2f', label_type = 'center')
+            st.subheader('Plot #3 – Negatively correlated elements:')
+            # create negative correlation bar graph
+            neg_corr_df = neg_corr_df.sort_values(by = element1, ascending = False).reset_index()
+            neg_corr_df.columns=['Feature','Correlation']
 
-                # Remove top and right borders
-                ax0.spines['top'].set_visible(False)
-                ax0.spines['right'].set_visible(False)
+            # Correlation with selected variable
+            fignegbar=plt.figure(figsize=(15,8),facecolor='white')
 
-                # ax0.grid(axis='y', zorder=0, color='gray', linestyle=':', dashes=(3,10))
-                # plt.title(f"Positive Correlation matched against {element1}")
-                st.pyplot(fig=figposbar)
-                st.markdown("Next, I performed EDA to gain insights into the asdhasdj.asdaijnkaksjajks") 
+            ax0=fignegbar.add_subplot(1,1,1)
+            ax0.grid(axis='y', color='gray', linestyle=':', dashes=(3,10))
 
-                st.subheader('Plot #3 – Negatively correlated elements:')
-                # create negative correlation bar graph
-                neg_corr_df = neg_corr_df.sort_values(by = element1, ascending = False).reset_index()
-                neg_corr_df.columns=['Feature','Correlation']
+            # palette=["mediumaquamarine" for i in range(16)]
+            # palette[2]='gold'
+            # palette[4]='gold'
+            barplot = sns.barplot(x='Correlation', y='Feature', data=neg_corr_df, palette = "Greens")
+            plt.bar_label(barplot.containers[0], fmt = '\n%.2f', size = 14, label_type = 'center')
 
-                # Correlation with selected variable
-                fignegbar=plt.figure(figsize=(15,8),facecolor='white')
+            # Remove top and right borders
+            ax0.spines['top'].set_visible(False)
+            ax0.spines['right'].set_visible(False)
 
-                ax0=fignegbar.add_subplot(1,1,1)
-                ax0.grid(axis='y', color='gray', linestyle=':', dashes=(3,10))
-
-                # palette=["mediumaquamarine" for i in range(16)]
-                # palette[2]='gold'
-                # palette[4]='gold'
-                barplot = sns.barplot(x='Correlation', y='Feature', data=neg_corr_df, palette = "Greens")
-                plt.bar_label(barplot.containers[0], fmt = '\n%.2f', size = 14, label_type = 'center')
-
-                # Remove top and right borders
-                ax0.spines['top'].set_visible(False)
-                ax0.spines['right'].set_visible(False)
-
-                # ax0.grid(axis='y', zorder=0, color='gray', linestyle=':', dashes=(3,10))
-                # plt.title(f"Negative Correlation matched against {element1}")
-                ax0.invert_xaxis()
-                st.pyplot(fig=fignegbar)
+            # ax0.grid(axis='y', zorder=0, color='gray', linestyle=':', dashes=(3,10))
+            # plt.title(f"Negative Correlation matched against {element1}")
+            ax0.invert_xaxis()
+            st.pyplot(fig=fignegbar)
 
 
-                st.subheader('Plot #4 – Top 5 positive correlated element boxplot:')
-                # postive correlation boxplot
-                PosT5Elements = pos_corr_df['Feature'].iloc[0:5].values
+            st.subheader('Plot #4 – Top 5 positive correlated element boxplot:')
+            # postive correlation boxplot
+            PosT5Elements = pos_corr_df['Feature'].iloc[0:5].values
 
-                figposbox, ax = plt.subplots()
+            figposbox, ax = plt.subplots()
 
-                ax.boxplot(file[PosT5Elements])
-                ax.set_xticklabels(PosT5Elements)
-                ax.set_xlabel('Element')
-                ax.set_ylabel('PPM')
-                st.pyplot(fig=figposbox)
-                
-                st.subheader('Plot #5 Top 5 negative correlated element boxplot:')
-                # negative correlation boxplot
-                NegT5Elements = neg_corr_df['Feature'].iloc[0:5].values
+            ax.boxplot(file[PosT5Elements])
+            ax.set_xticklabels(PosT5Elements)
+            ax.set_xlabel('Element')
+            ax.set_ylabel('PPM')
+            st.pyplot(fig=figposbox)
+            
+            st.subheader('Plot #5 Top 5 negative correlated element boxplot:')
+            # negative correlation boxplot
+            NegT5Elements = neg_corr_df['Feature'].iloc[0:5].values
 
-                fignegbox, ax = plt.subplots()
+            fignegbox, ax = plt.subplots()
 
-                ax.boxplot(file[NegT5Elements])
-                ax.set_xticklabels(NegT5Elements)
-                ax.set_xlabel('Element')
-                ax.set_ylabel('PPM')
-                st.pyplot(fig=fignegbox)
+            ax.boxplot(file[NegT5Elements])
+            ax.set_xticklabels(NegT5Elements)
+            ax.set_xlabel('Element')
+            ax.set_ylabel('PPM')
+            st.pyplot(fig=fignegbox)
                 
  
-        # if element is not in filtered columns, display error and list available elements
-        else:
-            st.error('Please try another element', icon="🚨")
-            st.error('Available elements:')
-            st.error(corr_df_matrix.columns.values)
+        # # if element is not in filtered columns, display error and list available elements
+        # else:
+        #     st.error('Please try another element', icon="🚨")
+        #     st.error('Available elements:')
+        #     st.error(corr_df_matrix.columns.values)
         
         
 
