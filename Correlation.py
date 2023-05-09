@@ -3,7 +3,14 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+for k, v in st.session_state.items():
+    st.session_state[k] = v
+
+
 from streamlit.components.v1 import html
+
+from streamlit_extras.switch_page_button import switch_page
 
 # #cheeky js to navigate to other pages src: https://github.com/streamlit/streamlit/issues/4832
 # def nav_page(Sensitivity_Slider, timeout_secs=3):
@@ -31,16 +38,42 @@ from streamlit.components.v1 import html
 #     """ % (Sensitivity_Slider, timeout_secs)
 #     html(nav_script)
 
+
+st.set_page_config(
+    page_title="Multipage App",
+    initial_sidebar_state="collapsed"
+)
+
+# Hide Sidebar 
+# st.markdown(
+#     """
+# <style>
+#     [data-testid="collapsedControl"] {
+#         display: none
+#     }
+# </style>
+# """,
+#     unsafe_allow_html=True,
+# )
+
+# Title
 st.title('Select Element and Correlation')
 
 # create file uploader for csv only
 file = st.file_uploader('Upload File', type='.csv')
 
+if "file" not in st.session_state:
+    st.session_state["file"] = ""
+
 # if file has been uploaded
 if file is not None:
     # read csv file
-    file = pd.read_csv(file)
-    
+    if file is not None:
+        file = pd.read_csv(file)
+
+    # Saves uploaded file to be used in other session states
+    st.session_state["file"] = file
+
     # Data Preprocessing 
     # Converts ppm to ppb
     ppm = []
@@ -68,9 +101,10 @@ if file is not None:
     # create dropdown menus for elements and correlation types
     element1 = st.selectbox('Select Element Of Interest', elements)
     cor_type1 = st.selectbox('Select Correlation Type', cor_types)
+    print(file)
 
     # if element has been chosen
-    if element1 is not 'Choose' and cor_type1 is not 'Choose':
+    if element1 != 'Choose' and cor_type1 != 'Choose':
         
         # set correlation type
         corr_matrix = file.corr(method=cor_type1, numeric_only = False)
@@ -90,9 +124,14 @@ if file is not None:
 
         # creates a sensitivity slider between 0 and 100 (values to two decimal points)
         # sensitivity = st.slider('Sensitivity selection', 0.00, 100.00, 0.00)
-        threshold = st.number_input('Threshold', min_value=0.00, max_value=100.00, value=0.00)
+        threshold = st.number_input('Threshold', min_value=0.0, max_value=0.99, value=0.0, step = 0.1)
         st.write("You have selected a threshold of ", threshold, '%')
+        print(threshold)
 
+        if "threshold" not in st.session_state:
+            st.session_state["threshold"] = ""
+
+        st.session_state["threshold"] = threshold
         # function that correlates data
         def correlation(dataset, correlation, threshold):
             col_corr = set() # Set of all the names of correlated columns
@@ -105,29 +144,28 @@ if file is not None:
                         col_corr.add(colname)
             return col_corr
 
+        col_corr = correlation(file, cor_type1, threshold)
+        
+        # Converts col_corr from set to list
+        list_col_corr = list(col_corr)
+        # Put it into a dataframe
+        corr_df = file[list_col_corr]
+        print(corr_df)
+        # create matrix
+        corr_df_matrix = corr_df.corr(method = cor_type1, numeric_only = False)
+        print(corr_df_matrix)    
+
+        # Filter dataframe based on pos / neg correlation 
+        neg_corr_df = corr_df_matrix[corr_df_matrix[[element1]] < 0]
+        pos_corr_df = corr_df_matrix[corr_df_matrix[[element1]] >= 0]
+        neg_corr_df.dropna(how = 'all', inplace = True)
+        neg_corr_df = neg_corr_df[[element1]]
+        pos_corr_df.dropna(how = 'all', inplace = True)
+        pos_corr_df = pos_corr_df[[element1]]
+        
         # if sensitivity has been chosen
-        if threshold is not 0.00:
+        if threshold != 0.0:
             st.title('Visualisation Report')
-            
-            # correlate data with initial 0.8 threshold
-            col_corr = correlation(file, cor_type1, threshold)
-
-            # Converts col_corr from set to list
-            list_col_corr = list(col_corr)
-            # Put it into a dataframe
-            corr_df = file[list_col_corr]
-            # create matrix
-            corr_df_matrix = corr_df.corr(method = cor_type1, numeric_only = False)
-
-            # corr_df_matrix[[element1]].sort_values(element1, ascending = True)
-
-            # Filter dataframe based on pos / neg correlation 
-            neg_corr_df = corr_df_matrix[corr_df_matrix[[element1]] < 0]
-            pos_corr_df = corr_df_matrix[corr_df_matrix[[element1]] >= 0]
-            neg_corr_df.dropna(how = 'all', inplace = True)
-            neg_corr_df = neg_corr_df[[element1]]
-            pos_corr_df.dropna(how = 'all', inplace = True)
-            pos_corr_df = pos_corr_df[[element1]]
             
             st.subheader('Plot #1 – Correlation Matrix:')
             # create heatmap
@@ -213,7 +251,15 @@ if file is not None:
             ax.set_xlabel('Element')
             ax.set_ylabel('PPM')
             st.pyplot(fig=fignegbox)
+
+            
                 
+
+
+        if "element1" not in st.session_state:
+            st.session_state["element1"] = ""
+
+        st.session_state["element1"] = element1
  
         # # if element is not in filtered columns, display error and list available elements
         # else:

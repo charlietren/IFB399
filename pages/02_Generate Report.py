@@ -4,21 +4,31 @@ import numpy as np
 
 st.title('Generate Report')
 
-df = pd.read_csv("BR20279856_cleaned.csv")
+# st.write("You have entered", st.session_state["my_input"])
 
-dataCSV = st.file_uploader('Upload File', type='.csv')
-dataCSV = pd.DataFrame(dataCSV)
+file = st.session_state["file"]
+element1 = st.session_state["element1"]
+threshold = st.session_state["threshold"]
 
-list = dataCSV.columns
-list2 = ['Spearman', 'Pearson', 'Kendall']
+st.dataframe(data=file)
+st.write("element1: " + element1)
+st.write("threshold: " + str(threshold))
 
-result = st.selectbox('Select Main ELement', list)
+# df = pd.read_csv("BR20279856_cleaned.csv")
 
-result1 = st.selectbox('Select Correlation Type', list2)
+# dataCSV = st.file_uploader('Upload File', type='.csv')
+# dataCSV = pd.DataFrame(dataCSV)
 
-print(dataCSV.columns)
+# list = dataCSV.columns
+# list2 = ['Spearman', 'Pearson', 'Kendall']
+
+# result = st.selectbox('Select Main ELement', list)
+
+# result1 = st.selectbox('Select Correlation Type', list2)
+
+# print(dataCSV.columns)
 
 
 
-with st.form("Generate Report"):
-    button_check2 = st.form_submit_button("Generate Report")
+# with st.form("Generate Report"):
+#     button_check2 = st.form_submit_button("Generate Report")

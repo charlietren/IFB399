@@ -32,6 +32,10 @@ def nav_page(Generate_Report, timeout_secs=3):
 
 st.title('Sensitivity Slider')
 
+next = st.button("Sensitivity Slider")
+if next:
+    switch_page("Sensitivity Slider")
+
 file = st.file_uploader('Upload File', type='.csv')
 
 if file is not None:
