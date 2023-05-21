@@ -45,16 +45,16 @@ st.set_page_config(
 )
 
 # Hide Sidebar 
-# st.markdown(
-#     """
-# <style>
-#     [data-testid="collapsedControl"] {
-#         display: none
-#     }
-# </style>
-# """,
-#     unsafe_allow_html=True,
-# )
+st.markdown(
+     """
+ <style>
+     [data-testid="collapsedControl"] {
+         display: none
+     }
+ </style>
+ """,
+     unsafe_allow_html=True,
+)
 
 # Title
 st.title('Select Element and Correlation')
@@ -101,7 +101,6 @@ if file is not None:
     # create dropdown menus for elements and correlation types
     element1 = st.selectbox('Select Element Of Interest', elements)
     cor_type1 = st.selectbox('Select Correlation Type', cor_types)
-    print(file)
 
     # if element has been chosen
     if element1 != 'Choose' and cor_type1 != 'Choose':
@@ -121,12 +120,12 @@ if file is not None:
 
         # show data in dataframe table (replace with actual data later)
         st.dataframe(data=dataFinal, width=200, height=300)
+        # st.dataframe(data=dataFinal, width=200, height=300)
 
         # creates a sensitivity slider between 0 and 100 (values to two decimal points)
         # sensitivity = st.slider('Sensitivity selection', 0.00, 100.00, 0.00)
         threshold = st.number_input('Threshold', min_value=0.0, max_value=0.99, value=0.0, step = 0.1)
         st.write("You have selected a threshold of ", threshold, '%')
-        print(threshold)
 
         if "threshold" not in st.session_state:
             st.session_state["threshold"] = ""
@@ -147,8 +146,25 @@ if file is not None:
             st.session_state["cor_type1"] = ""
 
         st.session_state["cor_type1"] = cor_type1
+        
+        if "file" not in st.session_state:
+            st.session_state["file"] = ""
+
+        st.session_state["file"] = file
+        
+
+        
+        
  
-        # # if element is not in filtered columns, display error and list available elements
+        
+    
+    
+    
+    
+    
+    
+    
+        # if element is not in filtered columns, display error and list available elements
         # else:
         #     st.error('Please try another element', icon="🚨")
         #     st.error('Available elements:')
