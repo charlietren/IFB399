@@ -130,7 +130,6 @@ fig=plt.figure(figsize=(15,8),facecolor='white')
 sns.boxplot(data = file[PosT5Elements])
 plt.xlabel('Element')
 plt.ylabel('PPM')
-
 plt.show()
 st.pyplot(fig)
 
@@ -142,4 +141,3 @@ sns.boxplot(data = file[NegT5Elements])
 plt.xlabel('Element')
 plt.ylabel('PPM')
 st.pyplot(fig)
-st.markdown("")
