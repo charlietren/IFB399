@@ -3,3 +3,4 @@ matplotlib
 numpy
 pandas
 streamlit
+streamlit_extras
