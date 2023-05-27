@@ -25,16 +25,10 @@ header_spacer1, header_1, header_spacer2 = st.columns((3, 6, 3))
 with header_1:
     st.title('Generate Report')
 
-# st.write("You have entered", st.session_state["my_input"])
-
 file = st.session_state["file"]
 element1 = st.session_state["element1"]
 threshold = st.session_state["threshold"]
 cor_type1 = st.session_state["cor_type1"]
-
-# st.dataframe(data=file)
-# st.write("element1: " + element1)
-# st.write("threshold: " + str(threshold))
 
 corr_matrix = file.corr(method=cor_type1, numeric_only = False)
 dataFinal = corr_matrix[[element1]].sort_values(element1, ascending = True)
