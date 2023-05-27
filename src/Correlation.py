@@ -6,38 +6,10 @@ import seaborn as sns
 
 for k, v in st.session_state.items():
     st.session_state[k] = v
-
-
+    
 from streamlit.components.v1 import html
 
 from streamlit_extras.switch_page_button import switch_page
-
-# #cheeky js to navigate to other pages src: https://github.com/streamlit/streamlit/issues/4832
-# def nav_page(Sensitivity_Slider, timeout_secs=3):
-#     nav_script = """
-#         <script type="text/javascript">
-#             function attempt_nav_page(page_name, start_time, timeout_secs) {
-#                 var links = window.parent.document.getElementsByTagName("a");
-#                 for (var i = 0; i < links.length; i++) {
-#                     if (links[i].href.toLowerCase().endsWith("/" + page_name.toLowerCase())) {
-#                         links[i].click();
-#                         return;
-#                     }
-#                 }
-#                 var elasped = new Date() - start_time;
-#                 if (elasped < timeout_secs * 1000) {
-#                     setTimeout(attempt_nav_page, 100, page_name, start_time, timeout_secs);
-#                 } else {
-#                     alert("Unable to navigate to page '" + page_name + "' after " + timeout_secs + " second(s).");
-#                 }
-#             }
-#             window.addEventListener("load", function() {
-#                 attempt_nav_page("%s", new Date(), %d);
-#             });
-#         </script>
-#     """ % (Sensitivity_Slider, timeout_secs)
-#     html(nav_script)
-
 
 st.set_page_config(
     page_title="Multipage App",
@@ -151,19 +123,3 @@ if file is not None:
             st.session_state["file"] = ""
 
         st.session_state["file"] = file
-    
-        # if element is not in filtered columns, display error and list available elements
-        # else:
-        #     st.error('Please try another element', icon="🚨")
-        #     st.error('Available elements:')
-        #     st.error(corr_df_matrix.columns.values)
-        
-        
-
-# #button to go to page 2
-# with st.form("Go to Page 2 Button"):
-#     sensitivity_button = st.form_submit_button("Go to Page 2")
-# if sensitivity_button:
-#     nav_page("Sensitivity_Slider")
-
-    
